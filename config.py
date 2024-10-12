@@ -1,0 +1,6 @@
+PIA_USER = ""
+PIA_PASS = ""
+PIA_LOCS = ["ES", "FR", "DE"]
+PIA_PORT_START = 26000
+SOCKS_USER = ""
+SOCKS_PASS = ""

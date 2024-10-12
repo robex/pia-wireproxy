@@ -1,0 +1,7 @@
+services:
+  pia-wireproxy:
+    build:
+      context: .
+    ports:
+      - "26000-26010:26000-26010"
+
