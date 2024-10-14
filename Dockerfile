@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m pip install -r requirements.txt
 
-
+RUN apt-get update && apt-get install -y wget
 RUN chown appuser:appuser /app
 
 # Switch to the non-privileged user to run the application.
@@ -42,7 +42,9 @@ COPY config.py config.py
 COPY key.py key.py
 COPY pia_wireproxy.py pia_wireproxy.py
 COPY requirements.txt requirements.txt
-COPY wireproxy wireproxy
+
+RUN wget https://github.com/pufferffish/wireproxy/releases/download/v1.0.9/wireproxy_linux_amd64.tar.gz
+RUN tar xzvf wireproxy_linux_amd64.tar.gz
 
 # Run the application.
 CMD python3 pia_wireproxy.py
