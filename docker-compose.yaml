@@ -4,11 +4,11 @@ services:
     build:
       context: .
     ports:
-      - "26000-26003:26000-26003"
+      - "26000-26002:26000-26002"
     environment:
       - PIA_USER=CHANGEME
       - PIA_PASS=CHANGEME
-      - PIA_LOCS=ES,DE,FR,US
+      - PIA_LOCS=NL,FR,US
       - PIA_PORT_START=26000
       - SOCKS_USER=socks
       - SOCKS_PASS=s0ck5
