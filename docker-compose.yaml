@@ -1,7 +1,14 @@
 services:
   pia-wireproxy:
+    restart: unless-stopped
     build:
       context: .
     ports:
-      - "26000-26010:26000-26010"
-
+      - "26000-26003:26000-26003"
+    environment:
+      - PIA_USER=CHANGEME
+      - PIA_PASS=CHANGEME
+      - PIA_LOCS=ES,DE,FR,US
+      - PIA_PORT_START=26000
+      - SOCKS_USER=socks
+      - SOCKS_PASS=s0ck5
