@@ -6,7 +6,7 @@ Docker container that automatically creates a number of SOCKS5 proxies to PIA (p
 ## Setup
 Change the environment variables in `docker-compose.yml` to the appropriate values. The `PIA_LOCS` variable accepts a list of comma-separated ISO country codes for which there is a PIA WG server available. Selecting a particular location inside a country is not currently supported, though it is not particularly hard to implement.
 
-You must **manually** adjust the number and range of ports in the `ports` section if you add more or less locations, and/or if you change the `PIA_START_PORT` variable.
+You must **manually** adjust the number and range of ports in the `ports` section if you add more or less locations, and/or if you change the `PIA_PORT_START` variable.
 
 Afterwards, just build the container and run it:
 
