@@ -12,3 +12,4 @@ services:
       - PIA_PORT_START=26000
       - SOCKS_USER=socks
       - SOCKS_PASS=s0ck5
+      - HEALTH_SLEEP=10

@@ -36,15 +36,15 @@ RUN chown appuser:appuser /app
 # Switch to the non-privileged user to run the application.
 USER appuser
 
+RUN wget https://github.com/pufferffish/wireproxy/releases/download/v1.0.9/wireproxy_linux_amd64.tar.gz
+RUN tar xzvf wireproxy_linux_amd64.tar.gz
+
 # Copy the source code into the container.
 COPY ca.rsa.4096.crt ca.rsa.4096.crt
 COPY config.py config.py
 COPY key.py key.py
 COPY pia_wireproxy.py pia_wireproxy.py
 COPY requirements.txt requirements.txt
-
-RUN wget https://github.com/pufferffish/wireproxy/releases/download/v1.0.9/wireproxy_linux_amd64.tar.gz
-RUN tar xzvf wireproxy_linux_amd64.tar.gz
 
 # Run the application.
 CMD python3 pia_wireproxy.py

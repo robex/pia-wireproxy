@@ -2,8 +2,10 @@ import requests
 import json
 import subprocess
 import os
+import sys
+import time
 
-from config import PIA_USER, PIA_PASS, PIA_LOCS, PIA_PORT_START, SOCKS_USER, SOCKS_PASS
+from config import PIA_USER, PIA_PASS, PIA_LOCS, PIA_PORT_START, SOCKS_USER, SOCKS_PASS, HEALTH_SLEEP
 from key import gen_wg_keys
 
 
@@ -55,6 +57,8 @@ def get_wg_config(region, token, socks_port):
 [Interface]
 Address = {j["peer_ip"]}/32
 PrivateKey = {sk}
+CheckAlive = 1.1.1.1
+CheckAliveInterval = 25
 
 [Peer]
 PersistentKeepalive = 25
@@ -83,43 +87,64 @@ def get_pia_token():
 
     return j["token"]
 
-def start_wireproxy_process(cfg_filename, port):
-    p = subprocess.Popen(["./wireproxy", "--config", cfg_filename])
+def start_wireproxy_process(cfg_filename, healthport):
+    haddr = f"localhost:{healthport}"
+    p = subprocess.Popen(["./wireproxy", "--config", cfg_filename, "--info", haddr])
     return p
 
-def start_wireproxy(region, token, socks_port):
-    cfg_str = get_wg_config(region, token, socks_port)
+def start_wireproxy(token, s):
+    cfg_str = get_wg_config(s["region"], token, s["port"])
 
     cfg_dir = "wg"
     if not os.path.exists(cfg_dir):
         os.makedirs(cfg_dir)
 
-    cfg_filename = f"{cfg_dir}/{region['cn']}.conf"
+    regname = s["region"]["cn"]
+    cfg_filename = f"{cfg_dir}/{regname}.conf"
 
     with open(cfg_filename, "w") as f:
         f.write(cfg_str)
         print(f"wrote config to {cfg_filename}")
     
-    return start_wireproxy_process(cfg_filename, socks_port)
+    return start_wireproxy_process(cfg_filename, s["healthport"])
+
+def check_health(servers):
+    # give time for wireproxy to start
+    time.sleep(HEALTH_SLEEP)
+
+    while True:
+        for srv in servers:
+            url = f"http://localhost:{srv['healthport']}"
+            endpoint = "/readyz"
+
+            r = requests.get(url + endpoint)
+            if r.status_code != 200:
+                return False
+
+            time.sleep(HEALTH_SLEEP)
+
+    return True
 
 def main():
     regions = get_wg_regions()
-
     token = get_pia_token()
 
-    server_candidate_locations = PIA_LOCS
-    socks_port_start = PIA_PORT_START
     n_servers = len(PIA_LOCS)
+    servers = []
 
     for i in range(0, n_servers):
-        loc = server_candidate_locations[i]
-        port = socks_port_start + i
-        region = regions[loc][0]
+        s = {
+            "loc": PIA_LOCS[i],
+            "port": PIA_PORT_START + i,
+            "healthport": PIA_PORT_START - 1 - i,
+            "region": regions[PIA_LOCS[i]][0],
+        }
 
-        print(region, port)
-        p = start_wireproxy(region, token, port)
+        s["proc"] = start_wireproxy(token, s)
+        servers.append(s)
 
-    p.wait()
+    check_health(servers)
+    sys.exit(1)
 
 main()
 
