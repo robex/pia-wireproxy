@@ -88,7 +88,7 @@ def get_pia_token():
     return j["token"]
 
 def start_wireproxy_process(cfg_filename, healthport):
-    haddr = f"localhost:{healthport}"
+    haddr = f"127.0.0.1:{healthport}"
     p = subprocess.Popen(["./wireproxy", "--config", cfg_filename, "--info", haddr])
     return p
 
@@ -114,7 +114,7 @@ def check_health(servers):
 
     while True:
         for srv in servers:
-            url = f"http://localhost:{srv['healthport']}"
+            url = f"http://127.0.0.1:{srv['healthport']}"
             endpoint = "/readyz"
 
             r = requests.get(url + endpoint)
