@@ -5,7 +5,7 @@ import os
 import sys
 import time
 
-from config import PIA_USER, PIA_PASS, PIA_LOCS, PIA_PORT_START, SOCKS_USER, SOCKS_PASS, HEALTH_SLEEP
+from config import PIA_USER, PIA_PASS, PIA_LOCS, PIA_PORT_START, SOCKS_USER, SOCKS_PASS, HEALTH_SLEEP, HEALTH_IP
 from key import gen_wg_keys
 
 
@@ -57,7 +57,7 @@ def get_wg_config(region, token, socks_port):
 [Interface]
 Address = {j["peer_ip"]}/32
 PrivateKey = {sk}
-CheckAlive = 1.1.1.1
+CheckAlive = {HEALTH_IP}
 CheckAliveInterval = 25
 
 [Peer]

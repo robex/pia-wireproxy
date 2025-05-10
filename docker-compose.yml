@@ -13,3 +13,4 @@ services:
       - SOCKS_USER=socks
       - SOCKS_PASS=s0ck5
       - HEALTH_SLEEP=10
+      - HEALTH_IP=8.8.8.8

@@ -1,4 +1,4 @@
 *.swp
 __pycache__/
 wg/
-config.prod.py
+docker-compose.prod.yml

@@ -7,3 +7,4 @@ PIA_PORT_START = int(os.environ["PIA_PORT_START"])
 SOCKS_USER = os.environ["SOCKS_USER"]
 SOCKS_PASS = os.environ["SOCKS_PASS"]
 HEALTH_SLEEP = int(os.environ["HEALTH_SLEEP"])
+HEALTH_IP = os.environ["HEALTH_IP"]
