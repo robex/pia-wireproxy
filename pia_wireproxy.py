@@ -141,8 +141,8 @@ def main():
     for i in range(0, n_servers):
         s = {
             "loc": config.PIA_LOCS[i],
-            "socks_port": config.PIA_SOCKS_PORTS[i],
-            "http_port": config.PIA_HTTP_PORTS[i],
+            "socks_port": config.PROXY_SOCKS_PORTS[i],
+            "http_port": config.PROXY_HTTP_PORTS[i],
             "healthport": config.HEALTH_PORT_START + i,
             "region": regions[config.PIA_LOCS[i]][0],
         }

@@ -12,13 +12,15 @@ services:
       # must be valid pia server locations
       - PIA_LOCS=NL,FR,US
       # ports are mapped to locations in the same list order
-      - PIA_SOCKS_PORTS=26000,26001,26002
-      - PIA_HTTP_PORTS=27000,27001,27002
+      - PROXY_SOCKS_PORTS=26000,26001,26002
+      - PROXY_HTTP_PORTS=27000,27001,27002
       # credentials for both socks5 and http proxies
       - PROXY_USER=socks
       - PROXY_PASS=s0ck5
-      # this port is for internal use only, but it must not overlap with proxy ports
-      # wireproxy will use incrementally as many ports as there are locations in PIA_LOCS
+      # for internal use only, but it must not overlap with proxy ports
+      # you must reserve incrementally as many ports as there are locations
+      # example: 3 locations in PIA_LOCS, HEALTH_PORT_START=2000
+      # wireproxy will reserve ports 2000, 2001, and 2002.
       - HEALTH_PORT_START=2000
       # time to sleep between healthcheck requests
       - HEALTH_SLEEP=10
