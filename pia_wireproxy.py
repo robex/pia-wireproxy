@@ -5,7 +5,7 @@ import os
 import sys
 import time
 
-from config import PIA_USER, PIA_PASS, PIA_LOCS, PIA_PORT_START, SOCKS_USER, SOCKS_PASS, HEALTH_SLEEP, HEALTH_IP
+import config
 from key import gen_wg_keys
 
 
@@ -40,7 +40,7 @@ def get_wg_json(region, token, pk):
         "pt": token,
         "pubkey": pk
     }
-    
+
     headers = {
         "Host": region["dns"]
     }
@@ -48,7 +48,7 @@ def get_wg_json(region, token, pk):
     r = requests.get(baseurl + endpoint, headers=headers, params=params, verify=False)
     return r.json()
 
-def get_wg_config(region, token, socks_port):
+def get_wg_config(region, token, socks_port, http_port):
     sk, pk = gen_wg_keys()
 
     j = get_wg_json(region, token, pk)
@@ -57,8 +57,9 @@ def get_wg_config(region, token, socks_port):
 [Interface]
 Address = {j["peer_ip"]}/32
 PrivateKey = {sk}
-CheckAlive = {HEALTH_IP}
+CheckAlive = {config.HEALTH_IP}
 CheckAliveInterval = 25
+DNS = 1.1.1.1
 
 [Peer]
 PersistentKeepalive = 25
@@ -68,8 +69,13 @@ Endpoint = {j["server_ip"]}:{j["server_port"]}
 
 [Socks5]
 BindAddress = 0.0.0.0:{socks_port}
-Username = {SOCKS_USER}
-Password = {SOCKS_PASS}
+Username = {config.PROXY_USER}
+Password = {config.PROXY_PASS}
+
+[http]
+BindAddress = 0.0.0.0:{http_port}
+Username = {config.PROXY_USER}
+Password = {config.PROXY_PASS}
 """
 
     return wg_file_str
@@ -78,8 +84,8 @@ def get_pia_token():
     token_url = "https://www.privateinternetaccess.com/api/client/v2/token"
 
     data = {
-        "username": PIA_USER,
-        "password": PIA_PASS
+        "username": config.PIA_USER,
+        "password": config.PIA_PASS
     }
 
     r = requests.post(token_url, data=data)
@@ -93,7 +99,7 @@ def start_wireproxy_process(cfg_filename, healthport):
     return p
 
 def start_wireproxy(token, s):
-    cfg_str = get_wg_config(s["region"], token, s["port"])
+    cfg_str = get_wg_config(s["region"], token, s["socks_port"], s["http_port"])
 
     cfg_dir = "wg"
     if not os.path.exists(cfg_dir):
@@ -105,12 +111,12 @@ def start_wireproxy(token, s):
     with open(cfg_filename, "w") as f:
         f.write(cfg_str)
         print(f"wrote config to {cfg_filename}")
-    
+
     return start_wireproxy_process(cfg_filename, s["healthport"])
 
 def check_health(servers):
     # give time for wireproxy to start
-    time.sleep(HEALTH_SLEEP)
+    time.sleep(config.HEALTH_SLEEP)
 
     while True:
         for srv in servers:
@@ -121,7 +127,7 @@ def check_health(servers):
             if r.status_code != 200:
                 return False
 
-            time.sleep(HEALTH_SLEEP)
+            time.sleep(config.HEALTH_SLEEP)
 
     return True
 
@@ -129,15 +135,16 @@ def main():
     regions = get_wg_regions()
     token = get_pia_token()
 
-    n_servers = len(PIA_LOCS)
+    n_servers = len(config.PIA_LOCS)
     servers = []
 
     for i in range(0, n_servers):
         s = {
-            "loc": PIA_LOCS[i],
-            "port": PIA_PORT_START + i,
-            "healthport": PIA_PORT_START - 1 - i,
-            "region": regions[PIA_LOCS[i]][0],
+            "loc": config.PIA_LOCS[i],
+            "socks_port": config.PIA_SOCKS_PORTS[i],
+            "http_port": config.PIA_HTTP_PORTS[i],
+            "healthport": config.HEALTH_PORT_START + i,
+            "region": regions[config.PIA_LOCS[i]][0],
         }
 
         s["proc"] = start_wireproxy(token, s)

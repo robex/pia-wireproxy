@@ -1,12 +1,12 @@
 # pia-wireproxy
-Docker container that automatically creates a number of SOCKS5 proxies to PIA (privateinternetaccess) VPN Wireguard servers, via [Wireproxy](https://github.com/pufferffish/wireproxy).
+Docker container that automatically creates a number of SOCKS5/HTTP proxies to PIA (privateinternetaccess) VPN Wireguard servers, via [Wireproxy](https://github.com/pufferffish/wireproxy).
 
 **You will need a valid, paid PIA account.**
 
 ## Setup
 Change the environment variables in `docker-compose.yml` to the appropriate values. The `PIA_LOCS` variable accepts a list of comma-separated ISO country codes for which there is a PIA WG server available. Selecting a particular location inside a country is not currently supported, though it is not particularly hard to implement.
 
-You must **manually** adjust the number and range of ports in the `ports` section if you add more or less locations, and/or if you change the `PIA_PORT_START` variable.
+You must **manually** adjust the number and range of ports in the `ports` section if you add more or less locations, and/or if you change the `PIA_SOCKS_PORTS` or `PIA_HTTP_PORTS` variables.
 
 Afterwards, just build the container and run it:
 

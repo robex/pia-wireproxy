@@ -5,12 +5,22 @@ services:
       context: .
     ports:
       - "26000-26002:26000-26002"
+      - "27000-27002:27000-27002"
     environment:
       - PIA_USER=CHANGEME
       - PIA_PASS=CHANGEME
+      # must be valid pia server locations
       - PIA_LOCS=NL,FR,US
-      - PIA_PORT_START=26000
-      - SOCKS_USER=socks
-      - SOCKS_PASS=s0ck5
+      # ports are mapped to locations in the same list order
+      - PIA_SOCKS_PORTS=26000,26001,26002
+      - PIA_HTTP_PORTS=27000,27001,27002
+      # credentials for both socks5 and http proxies
+      - PROXY_USER=socks
+      - PROXY_PASS=s0ck5
+      # this port is for internal use only, but it must not overlap with proxy ports
+      # wireproxy will use incrementally as many ports as there are locations in PIA_LOCS
+      - HEALTH_PORT_START=2000
+      # time to sleep between healthcheck requests
       - HEALTH_SLEEP=10
+      # ip address to use for healthcheck
       - HEALTH_IP=8.8.8.8

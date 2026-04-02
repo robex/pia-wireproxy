@@ -36,7 +36,7 @@ RUN chown appuser:appuser /app
 # Switch to the non-privileged user to run the application.
 USER appuser
 
-RUN wget https://github.com/pufferffish/wireproxy/releases/download/v1.0.9/wireproxy_linux_amd64.tar.gz
+RUN wget https://github.com/windtf/wireproxy/releases/download/v1.1.2/wireproxy_linux_amd64.tar.gz
 RUN tar xzvf wireproxy_linux_amd64.tar.gz
 
 # Copy the source code into the container.

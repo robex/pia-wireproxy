@@ -2,3 +2,4 @@
 __pycache__/
 wg/
 docker-compose.prod.yml
+docker-compose.dev.yml
