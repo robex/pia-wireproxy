@@ -21,7 +21,7 @@ def get_wg_regions():
         if region["country"] not in regions:
             regions[region["country"]] = []
 
-        if not region["offline"]:
+        if not region["offline"] and "wg" in region["servers"]:
             for ip in region["servers"]["wg"]:
                 r = {
                     "ip": ip["ip"],
