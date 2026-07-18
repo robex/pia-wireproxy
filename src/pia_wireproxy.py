@@ -4,11 +4,13 @@ import subprocess
 import os
 import sys
 import time
+from pathlib import Path
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
 import config
 from key import gen_wg_keys
 
+TOKEN_FILE = Path(config.TOKEN_CACHE_FILE)
 
 def get_wg_regions():
     regions = {}
@@ -85,19 +87,39 @@ Password = {config.PROXY_PASS}
 
     return wg_file_str
 
-def get_pia_token():
-    token_url = "https://www.privateinternetaccess.com/api/client/v2/token"
-
-    data = {
-        "username": config.PIA_USER,
-        "password": config.PIA_PASS
-    }
-
-    r = requests.post(token_url, data=data)
+def _get_pia_token():
+    r = requests.post(
+        "https://www.privateinternetaccess.com/api/client/v2/token",
+        data={
+            "username": config.PIA_USER,
+            "password": config.PIA_PASS,
+        },
+    )
     r.raise_for_status()
 
-    j = r.json()
-    return j["token"]
+    token = r.json()["token"]
+
+    TOKEN_FILE.write_text(
+        json.dumps({
+            "token": token,
+            "expires": time.time() + config.TOKEN_LIFETIME,
+        })
+    )
+
+    return token
+
+def get_pia_token(force_refresh=False):
+    if not force_refresh and TOKEN_FILE.exists():
+        try:
+            cache = json.loads(TOKEN_FILE.read_text())
+            if cache["expires"] > time.time():
+                print("retrieving cached pia token")
+                return cache["token"]
+        except Exception:
+            pass
+
+    print("requesting new pia token")
+    return _get_pia_token()
 
 def start_wireproxy_process(cfg_filename, healthport):
     haddr = f"127.0.0.1:{healthport}"
@@ -136,11 +158,14 @@ def check_health(servers):
 def main():
     regions = get_wg_regions()
 
-    try:
-        token = get_pia_token()
-    except requests.exceptions.HTTPError as e:
-        print(f"error retrieving PIA token: {e}")
-        sys.exit(1)
+    force_refresh = False
+    while True:
+        try:
+            token = get_pia_token(force_refresh)
+            break
+        except requests.exceptions.HTTPError as e:
+            print(f"error retrieving PIA token: {e}")
+            force_refresh = True
 
     n_servers = len(config.PIA_LOCS)
     servers = []

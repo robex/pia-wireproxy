@@ -16,3 +16,6 @@ HEALTH_IP = os.environ["HEALTH_IP"]
 WG_DIR = "/tmp/wg"
 WIREPROXY_BIN = "/app/wireproxy"
 CA_FILE = "/app/ca.rsa.4096.crt"
+
+TOKEN_CACHE_FILE = "/data/token.json"
+TOKEN_LIFETIME = 23 * 60 * 60

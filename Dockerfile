@@ -32,6 +32,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 RUN apt-get update && apt-get install -y wget
 RUN chown appuser:appuser /app
+RUN mkdir /data && chown appuser:appuser /data
 
 # Switch to the non-privileged user to run the application.
 USER appuser

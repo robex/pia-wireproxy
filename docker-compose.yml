@@ -6,6 +6,8 @@ services:
     ports:
       - "26000-26002:26000-26002"
       - "27000-27002:27000-27002"
+    volumes:
+      - pia-cache:/data
     environment:
       - PIA_USER=CHANGEME
       - PIA_PASS=CHANGEME
@@ -24,3 +26,6 @@ services:
       - HEALTH_SLEEP=10
       # ip address to use for healthcheck
       - HEALTH_IP=8.8.8.8
+
+volumes:
+  pia-cache:
