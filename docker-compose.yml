@@ -18,10 +18,8 @@ services:
       - PROXY_USER=socks
       - PROXY_PASS=s0ck5
       # for internal use only, but it must not overlap with proxy ports
-      # you must reserve incrementally as many ports as there are locations
-      # example: 3 locations in PIA_LOCS, HEALTH_PORT_START=2000
-      # wireproxy will reserve ports 2000, 2001, and 2002.
-      - HEALTH_PORT_START=2000
+      # you must reserve as many ports as there are locations
+      - HEALTH_PORTS=2000,2001,2002
       # time to sleep between healthcheck requests
       - HEALTH_SLEEP=10
       # ip address to use for healthcheck

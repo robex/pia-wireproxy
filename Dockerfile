@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.11.4
+ARG PYTHON_VERSION=3.12
 FROM python:${PYTHON_VERSION}-slim AS base
 
 # Prevents Python from writing pyc files.
@@ -36,16 +36,12 @@ RUN chown appuser:appuser /app
 # Switch to the non-privileged user to run the application.
 USER appuser
 
-RUN wget https://github.com/windtf/wireproxy/releases/download/v1.1.2/wireproxy_linux_amd64.tar.gz
-RUN tar xzvf wireproxy_linux_amd64.tar.gz
+RUN wget https://github.com/windtf/wireproxy/releases/download/v1.1.3/wireproxy_linux_amd64.tar.gz
+RUN tar xzvf wireproxy_linux_amd64.tar.gz && rm wireproxy_linux_amd64.tar.gz
 
 # Copy the source code into the container.
+COPY src/ src/
 COPY ca.rsa.4096.crt ca.rsa.4096.crt
-COPY config.py config.py
-COPY key.py key.py
-COPY pia_wireproxy.py pia_wireproxy.py
-COPY requirements.txt requirements.txt
 
 # Run the application.
-CMD python3 pia_wireproxy.py
-
+CMD python3 src/pia_wireproxy.py

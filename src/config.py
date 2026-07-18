@@ -9,6 +9,10 @@ PROXY_HTTP_PORTS = [int(x) for x in os.environ["PROXY_HTTP_PORTS"].split(",")]
 PROXY_USER = os.environ["PROXY_USER"]
 PROXY_PASS = os.environ["PROXY_PASS"]
 
-HEALTH_PORT_START = int(os.environ["HEALTH_PORT_START"])
+HEALTH_PORTS = [int(x) for x in os.environ["HEALTH_PORTS"].split(",")]
 HEALTH_SLEEP = int(os.environ["HEALTH_SLEEP"])
 HEALTH_IP = os.environ["HEALTH_IP"]
+
+WG_DIR = "/tmp/wg"
+WIREPROXY_BIN = "/app/wireproxy"
+CA_FILE = "/app/ca.rsa.4096.crt"

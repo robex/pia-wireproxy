@@ -4,6 +4,7 @@ import subprocess
 import os
 import sys
 import time
+from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
 import config
 from key import gen_wg_keys
@@ -42,10 +43,14 @@ def get_wg_json(region, token, pk):
     }
 
     headers = {
-        "Host": region["dns"]
+        "Host": region["cn"]
     }
 
-    r = requests.get(baseurl + endpoint, headers=headers, params=params, verify=False)
+    # for proper certificate validation
+    s = requests.Session()
+    s.mount("https://", HostHeaderSSLAdapter())
+
+    r = s.get(baseurl + endpoint, headers=headers, params=params, verify=config.CA_FILE)
     return r.json()
 
 def get_wg_config(region, token, socks_port, http_port):
@@ -89,24 +94,23 @@ def get_pia_token():
     }
 
     r = requests.post(token_url, data=data)
-    j = r.json()
+    r.raise_for_status()
 
+    j = r.json()
     return j["token"]
 
 def start_wireproxy_process(cfg_filename, healthport):
     haddr = f"127.0.0.1:{healthport}"
-    p = subprocess.Popen(["./wireproxy", "--config", cfg_filename, "--info", haddr])
+    p = subprocess.Popen([config.WIREPROXY_BIN, "--config", cfg_filename, "--info", haddr])
     return p
 
 def start_wireproxy(token, s):
     cfg_str = get_wg_config(s["region"], token, s["socks_port"], s["http_port"])
 
-    cfg_dir = "wg"
-    if not os.path.exists(cfg_dir):
-        os.makedirs(cfg_dir)
+    os.makedirs(config.WG_DIR, exist_ok=True)
 
     regname = s["region"]["cn"]
-    cfg_filename = f"{cfg_dir}/{regname}.conf"
+    cfg_filename = f"{config.WG_DIR}/{regname}.conf"
 
     with open(cfg_filename, "w") as f:
         f.write(cfg_str)
@@ -129,11 +133,14 @@ def check_health(servers):
 
             time.sleep(config.HEALTH_SLEEP)
 
-    return True
-
 def main():
     regions = get_wg_regions()
-    token = get_pia_token()
+
+    try:
+        token = get_pia_token()
+    except requests.exceptions.HTTPError as e:
+        print(f"error retrieving PIA token: {e}")
+        sys.exit(1)
 
     n_servers = len(config.PIA_LOCS)
     servers = []
@@ -143,7 +150,7 @@ def main():
             "loc": config.PIA_LOCS[i],
             "socks_port": config.PROXY_SOCKS_PORTS[i],
             "http_port": config.PROXY_HTTP_PORTS[i],
-            "healthport": config.HEALTH_PORT_START + i,
+            "healthport": config.HEALTH_PORTS[i],
             "region": regions[config.PIA_LOCS[i]][0],
         }
 
