@@ -45,4 +45,4 @@ COPY src/ src/
 COPY ca.rsa.4096.crt ca.rsa.4096.crt
 
 # Run the application.
-CMD python3 src/pia_wireproxy.py
+CMD ["python3", "src/pia_wireproxy.py"]

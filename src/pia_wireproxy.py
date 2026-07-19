@@ -4,6 +4,9 @@ import subprocess
 import os
 import sys
 import time
+import signal
+import threading
+
 from pathlib import Path
 from requests_toolbelt.adapters.host_header_ssl import HostHeaderSSLAdapter
 
@@ -11,8 +14,11 @@ import config
 from key import gen_wg_keys
 
 TOKEN_FILE = Path(config.TOKEN_CACHE_FILE)
+servers = []
+shutdown_event = threading.Event()
 
 def get_wg_regions():
+    print("retrieving pia region info")
     regions = {}
     serverlist_url = "https://serverlist.piaservers.net/vpninfo/servers/v6"
 
@@ -123,7 +129,8 @@ def get_pia_token(force_refresh=False):
 
 def start_wireproxy_process(cfg_filename, healthport):
     haddr = f"127.0.0.1:{healthport}"
-    p = subprocess.Popen([config.WIREPROXY_BIN, "--config", cfg_filename, "--info", haddr])
+    print(f"starting wireproxy server with config {cfg_filename}, health ip: {haddr}")
+    p = subprocess.Popen([config.WIREPROXY_BIN, "--config", cfg_filename, "--info", haddr, "--silent"])
     return p
 
 def start_wireproxy(token, s):
@@ -142,9 +149,10 @@ def start_wireproxy(token, s):
 
 def check_health(servers):
     # give time for wireproxy to start
-    time.sleep(config.HEALTH_SLEEP)
+    if shutdown_event.wait(config.HEALTH_SLEEP):
+        return False
 
-    while True:
+    while not shutdown_event.is_set():
         for srv in servers:
             url = f"http://127.0.0.1:{srv['healthport']}"
             endpoint = "/readyz"
@@ -153,13 +161,33 @@ def check_health(servers):
             if r.status_code != 200:
                 return False
 
-            time.sleep(config.HEALTH_SLEEP)
+            if shutdown_event.wait(config.HEALTH_SLEEP):
+                return False
+
+    return False
+
+def shutdown(signum, frame):
+    print(f"received signal {signal.Signals(signum).name}, shutting down...", flush=True)
+    shutdown_event.set()
+
+    for s in servers:
+        if s["proc"].poll() is None:
+            print(f"terminating wireproxy pid={s['proc'].pid}")
+            s["proc"].terminate()
+
+    for s in servers:
+        s["proc"].wait()
+
+    sys.exit(0)
 
 def main():
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
     regions = get_wg_regions()
 
     force_refresh = False
-    while True:
+    for i in range(0, 2):
         try:
             token = get_pia_token(force_refresh)
             break
@@ -168,7 +196,6 @@ def main():
             force_refresh = True
 
     n_servers = len(config.PIA_LOCS)
-    servers = []
 
     for i in range(0, n_servers):
         s = {
@@ -182,8 +209,8 @@ def main():
         s["proc"] = start_wireproxy(token, s)
         servers.append(s)
 
-    check_health(servers)
-    sys.exit(1)
+    if not check_health(servers):
+        sys.exit(1)
 
 main()
 
